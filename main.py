@@ -151,13 +151,12 @@ def main():
     queue = [startPoint]
     unvisitedPoints.remove(startPoint)
 
-    end = 0
+    last_iteration = 0
     lenght_of_path = 0
 
     while queue:
         currentPoint = queue.pop(0)
         neighbours = getNeighbours(matrix, currentPoint)
-        lenght_of_path += 1
 
         for neighbour in neighbours:
             if neighbour in unvisitedPoints:
@@ -166,8 +165,8 @@ def main():
                 unvisitedPoints.remove(neighbour)
                 if neighbour == endPoint:
                     paths.append({"points": backtrace(parent, startPoint, neighbour) })
-                    end = 1
-        if end:
+                    last_iteration = 1
+        if last_iteration:
             while queue:
                 currentPoint = queue.pop(0)
                 neighbours = getNeighbours(matrix, currentPoint)

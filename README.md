@@ -1,4 +1,4 @@
-Pokrenuti aplikaciju komandom "python main.py * putanjaDoXmlFajlaSaMapom * [putanjaDoIzlaznogJsonFajlaSaNajkracimPutanjama]"
+Pokrenuti aplikaciju komandom "python main.py * putanjaDoXmlFajlaSaMapom * [putanjaDoIzlaznogJsonFajla]"
 
 ** - obavezan parametar
 

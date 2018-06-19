@@ -28,14 +28,9 @@ def checkXmlContent(xmlRoot):
             if ("row" not in child.attrib) or (int(child.attrib["row"]) < 1) or (int(child.attrib["row"]) > 100):
                 xmlFormatError()
                 
-    if 'start-point' not in checkArray:
-        xmlFormatError()
-    if 'end-point' not in checkArray:
-        xmlFormatError()
-    if 'cells' not in checkArray:
-        xmlFormatError()
-    if len(checkArray) != 3:
-        xmlFormatError()
+    if not set(['start-point', 'end-point', 'cells']).issubset(checkArray):
+    	xmlFormatError()
+    
     for cells in xmlRoot.findall("cells"):
         for cell in cells:
             if cell.tag != 'cell':

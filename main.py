@@ -3,6 +3,49 @@ import time
 import sys
 import json
 
+def checkRequiredParameter():
+    if len(sys.argv) < 2:
+        print("Nije prosledjen obavezan parametar!")
+        sys.exit()
+    elif len(sys.argv) > 3:
+        print("Postoji visak parametara...")
+        sys.exit()
+
+def xmlFormatError():
+    print("Greska u formatu .xml fajla")
+    sys.exit()
+
+def checkXmlContent(xmlRoot):
+    if xmlRoot.tag != "map":
+        xmlFormatError()
+
+    checkArray = []
+    for child in xmlRoot:
+        checkArray.append(child.tag)
+        if child.tag != 'cells':
+            if ("col" not in child.attrib) or (child.attrib["col"] < 'A') or (child.attrib["col"] > 'Z'):
+                xmlFormatError()
+            if ("row" not in child.attrib) or (int(child.attrib["row"]) < 1) or (int(child.attrib["row"]) > 100):
+                xmlFormatError()
+                
+    if 'start-point' not in checkArray:
+        xmlFormatError()
+    if 'end-point' not in checkArray:
+        xmlFormatError()
+    if 'cells' not in checkArray:
+        xmlFormatError()
+    if len(checkArray) != 3:
+        xmlFormatError()
+    for cells in xmlRoot.findall("cells"):
+        for cell in cells:
+            if cell.tag != 'cell':
+                xmlFormatError()
+            if ("col" not in cell.attrib) or (cell.attrib["col"] < 'A') or (cell.attrib["col"] > 'Z'):
+                xmlFormatError()
+            if ("row" not in cell.attrib) or (int(cell.attrib["row"]) < 1) or (int(cell.attrib["row"]) > 100):
+                xmlFormatError()
+
+
 def getRow(xmlElem):
     return int(xmlElem.get("row")) - 1
 
@@ -12,16 +55,37 @@ def getCol(xmlElem):
 def getPoint(xmlElem):
     return [getRow(xmlElem), getCol(xmlElem)]
     
+def upperCellExists(matrix, row_num, col_num):
+    upper_cell = matrix[row_num - 1][col_num]
+    return (row_num is not 0) and (upper_cell is 1)
+    
+def bottomCellExists(matrix, row_num, col_num):
+    bottom_cell = matrix[row_num + 1 - len(matrix)][col_num]
+    return (row_num is not len(matrix) - 1) and (bottom_cell is 1)
+
+def leftCellExists(matrix, row_num, col_num):
+    left_cell = matrix[row_num][col_num - 1]
+    return (col_num is not 0) and (left_cell is 1)
+
+def rightCellExists(matrix, row_num, col_num):
+    right_cell = matrix[row_num][col_num + 1 - len(matrix[0])]
+    return (row_num is not len(matrix[0])) and (right_cell is 1)
+
+
 def getNeighbours(matrix, point):
     res = []
-    if (point[0] != 0) and (matrix[point[0] - 1][point[1]] == 1):
-        res.append([point[0] - 1, point[1]])
-    if (point[0] + 1 != len(matrix)) and (matrix[point[0] + 1][point[1]] == 1):
-        res.append([point[0] + 1, point[1]])
-    if (point[1] != 0) and (matrix[point[0]][point[1] - 1] == 1):
-        res.append([point[0], point[1] - 1])
-    if (point[1] + 1 != len(matrix[0])) and (matrix[point[0]][point[1] + 1] == 1):
-        res.append([point[0], point[1] + 1])
+    if upperCellExists(matrix, point[0], point[1]):
+        upper_cell = [point[0] - 1, point[1]]
+        res.append(upper_cell)
+    if bottomCellExists(matrix, point[0], point[1]):
+        bottom_cell = [point[0] + 1, point[1]]
+        res.append(bottom_cell)
+    if leftCellExists(matrix, point[0], point[1]):
+        left_cell = [point[0], point[1] - 1]
+        res.append(left_cell)
+    if rightCellExists(matrix, point[0], point[1]):
+        right_cell = [point[0], point[1] + 1]
+        res.append(right_cell)
     return res
 
 def format_path(path):
@@ -33,16 +97,22 @@ def format_path(path):
         })
     return new_path
 
+def parentPoint(parent, path):
+    return parent[path[-1][0]][path[-1][1]]
+
 def backtrace(parent, start, end):
     path = [end]
     while path[-1] != start:
-        path.append(parent[path[-1][0]][path[-1][1]])
+        path.append(parentPoint(parent, path))
     path.reverse()
     return format_path(path)
 
 
-def main(paths):
+def main():
+    paths = []
     xmlRoot = ET.parse(sys.argv[1]).getroot()
+
+    checkXmlContent(xmlRoot)
 
     xmlStartCell = xmlRoot.find("start-point")
     startPoint = getPoint(xmlStartCell)
@@ -82,10 +152,12 @@ def main(paths):
     unvisitedPoints.remove(startPoint)
 
     end = 0
+    lenght_of_path = 0
 
     while queue:
         currentPoint = queue.pop(0)
         neighbours = getNeighbours(matrix, currentPoint)
+        lenght_of_path += 1
 
         for neighbour in neighbours:
             if neighbour in unvisitedPoints:
@@ -105,23 +177,33 @@ def main(paths):
                         parent[neighbour[0]][neighbour[1]] = currentPoint
                         if neighbour == endPoint:
                             paths.append({"points": backtrace(parent, startPoint, neighbour) })
+            break
 
-
+    print (lenght_of_path)
     return paths
 
-if __name__ == "__main__":
-    start_time = time.time()
-    paths = main([])
-    returnJsonData = {
-        "execution_time_in_ms": round((time.time() - start_time) / 1000, 2),	
-        "paths": paths
-    }
+def writeJson(filepath, jsonData):
+    with open(filepath, 'w') as outfile:
+        outfile.write(json.dumps(jsonData, indent=4, sort_keys=True))
+        outfile.close()
+    print(filepath)
+
+def getFilepath():
     filepath = "json.json"
     if len(sys.argv) == 3:
         filepath = sys.argv[2]
+    return filepath
 
-    with open(filepath, 'w') as outfile:
-        outfile.write(json.dumps(returnJsonData, indent=4, sort_keys=True))
-        outfile.close()
+if True:
+    checkRequiredParameter()
 
-    print(filepath)
+    start_time = time.time()
+
+    paths = main()
+    jsonData = {
+        "execution_time_in_ms": round((time.time() - start_time) / 1000, 2),	
+        "paths": paths
+    }
+
+    filepath = getFilepath()
+    writeJson(filepath, jsonData)

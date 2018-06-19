@@ -143,11 +143,16 @@ def backtrace(mapHelper, start, end):
 
 def main():
     paths = []
-    xmlRoot = ET.parse(sys.argv[1]).getroot()
+
+    xmlFileName = sys.argv[1]
+    if not xmlFileName.endswith(".xml"):
+        print("Obavezan parametar specificiran u pogresnom formatu!")
+        sys.exit
+
+    xmlRoot = ET.parse(xmlFileName).getroot()
     
     mapHelper = MapHelper(xmlRoot)
 
-    mapHelper.checkXmlContent()
     mapHelper.checkXmlContent()
 
     xmlStartCell = xmlRoot.find("start-point")

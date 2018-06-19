@@ -177,8 +177,6 @@ def main():
                         if neighbour == endPoint:
                             paths.append({"points": backtrace(parent, startPoint, neighbour) })
             break
-
-    print (lenght_of_path)
     return paths
 
 def writeJson(filepath, jsonData):

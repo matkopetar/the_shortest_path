@@ -39,10 +39,10 @@ class MapHelper:
     @staticmethod
     def checkRequiredParameter():
         if len(sys.argv) < 2:
-            print("Nije prosledjen obavezan parametar!")
+            print("Missing required .xml parameter!")
             sys.exit()
         elif len(sys.argv) > 3:
-            print("Postoji visak parametara...")
+            print("You have more than two parameters!")
             sys.exit()
 
     @staticmethod
@@ -91,7 +91,7 @@ class MapHelper:
     
     @staticmethod
     def xmlFormatError():
-        print("Greska u formatu .xml fajla")
+        print("Xml file is in the wrong format!")
         sys.exit()
 
     def checkXmlContent(self):
@@ -142,7 +142,7 @@ def main():
 
     xmlFileName = sys.argv[1]
     if not xmlFileName.endswith(".xml"):
-        print("Obavezan parametar specificiran u pogresnom formatu!")
+        print("Required .xml parameter is not specified as .xml!")
         sys.exit()
 
     xmlRoot = ET.parse(xmlFileName).getroot()

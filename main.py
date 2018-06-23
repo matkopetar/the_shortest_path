@@ -88,10 +88,6 @@ class MapHelper:
             right_cell = [point[0], point[1] + 1]
             res.append(right_cell)
         return res
-
-    def parentPoint(self, path):
-        return self.parent[path[-1][0]][path[-1][1]]
-
     
     @staticmethod
     def xmlFormatError():
@@ -133,10 +129,10 @@ def format_path(path):
         })
     return new_path
 
-def backtrace(mapHelper, start, end):
+def backtrace(parent, start, end):
     path = [end]
     while path[-1] != start:
-        path.append(mapHelper.parentPoint(path))
+        path.append(parent[path[-1][0]][path[-1][1]])
     path.reverse()
     return format_path(path)
 
@@ -147,7 +143,7 @@ def main():
     xmlFileName = sys.argv[1]
     if not xmlFileName.endswith(".xml"):
         print("Obavezan parametar specificiran u pogresnom formatu!")
-        sys.exit
+        sys.exit()
 
     xmlRoot = ET.parse(xmlFileName).getroot()
     
@@ -176,7 +172,7 @@ def main():
                 queue.append(neighbour)
                 mapHelper.unvisitedPoints.remove(neighbour)
                 if neighbour == endPoint:
-                    paths.append({"points": backtrace(mapHelper, startPoint, neighbour) })
+                    paths.append({"points": backtrace(mapHelper.parent, startPoint, neighbour) })
                     last_iteration = True
         if last_iteration:
             while queue:

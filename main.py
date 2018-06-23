@@ -37,15 +37,6 @@ class MapHelper:
             self.matrix[point[0]][point[1]] = 1
 
     @staticmethod
-    def checkRequiredParameter():
-        if len(sys.argv) < 2:
-            print("Missing required .xml parameter!")
-            sys.exit()
-        elif len(sys.argv) > 3:
-            print("You have more than two parameters!")
-            sys.exit()
-
-    @staticmethod
     def getRow(xmlElem):
         return int(xmlElem.get("row")) - 1
 
@@ -88,37 +79,6 @@ class MapHelper:
             right_cell = [point[0], point[1] + 1]
             res.append(right_cell)
         return res
-    
-    @staticmethod
-    def xmlFormatError():
-        print("Xml file is in the wrong format!")
-        sys.exit()
-
-    def checkXmlContent(self):
-        if self.xmlRoot.tag != "map":
-            MapHelper.xmlFormatError()
-
-        checkArray = []
-        for child in self.xmlRoot:
-            checkArray.append(child.tag)
-            if child.tag != 'cells':
-                if ("col" not in child.attrib) or (child.attrib["col"] < 'A') or (child.attrib["col"] > 'Z'):
-                    MapHelper.xmlFormatError()
-                if ("row" not in child.attrib) or (int(child.attrib["row"]) < 1) or (int(child.attrib["row"]) > 100):
-                    MapHelper.xmlFormatError()
-                    
-        if not set(['start-point', 'end-point', 'cells']).issubset(checkArray):
-            MapHelper.xmlFormatError()
-        
-        for cells in self.xmlRoot.findall("cells"):
-            for cell in cells:
-                if cell.tag != 'cell':
-                    MapHelper.xmlFormatError()
-                if ("col" not in cell.attrib) or (cell.attrib["col"] < 'A') or (cell.attrib["col"] > 'Z'):
-                    MapHelper.xmlFormatError()
-                if ("row" not in cell.attrib) or (int(cell.attrib["row"]) < 1) or (int(cell.attrib["row"]) > 100):
-                    MapHelper.xmlFormatError()
-
 
 def format_path(path):
     new_path = []
@@ -137,19 +97,13 @@ def backtrace(parent, start, end):
     return format_path(path)
 
 
-def main():
+def main(xmlFileName):
     paths = []
-
-    xmlFileName = sys.argv[1]
-    if not xmlFileName.endswith(".xml"):
-        print("Required .xml parameter is not specified as .xml!")
-        sys.exit()
 
     xmlRoot = ET.parse(xmlFileName).getroot()
     
     mapHelper = MapHelper(xmlRoot)
 
-    mapHelper.checkXmlContent()
 
     xmlStartCell = xmlRoot.find("start-point")
     startPoint = MapHelper.getPoint(xmlStartCell)
@@ -187,6 +141,59 @@ def main():
             break
     return paths
 
+def checkIfRequiredParameterExists():
+    if len(sys.argv) < 2:
+        print("Missing required .xml parameter!")
+        sys.exit()
+    elif len(sys.argv) > 3:
+        print("You have more than two parameters!")
+        sys.exit()
+
+def checkIfRequiredParemeterIsXML(xmlFileName):
+    if not xmlFileName.endswith(".xml"):
+        print("Required .xml parameter is not specified as .xml!")
+        sys.exit()
+
+def xmlFormatError():
+    print("Xml file is in the wrong format!")
+    sys.exit()
+
+def checkXmlContent(xmlRoot):
+    if xmlRoot.tag != "map":
+        xmlFormatError()
+
+    checkArray = []
+    for child in xmlRoot:
+        checkArray.append(child.tag)
+        if child.tag != 'cells':
+            if ("col" not in child.attrib) or (child.attrib["col"] < 'A') or (child.attrib["col"] > 'Z'):
+                xmlFormatError()
+            if ("row" not in child.attrib) or (int(child.attrib["row"]) < 1) or (int(child.attrib["row"]) > 100):
+                xmlFormatError()
+                
+    if not set(['start-point', 'end-point', 'cells']).issubset(checkArray):
+        xmlFormatError()
+    
+    for cells in xmlRoot.findall("cells"):
+        for cell in cells:
+            if cell.tag != 'cell':
+                xmlFormatError()
+            if ("col" not in cell.attrib) or (cell.attrib["col"] < 'A') or (cell.attrib["col"] > 'Z'):
+                xmlFormatError()
+            if ("row" not in cell.attrib) or (int(cell.attrib["row"]) < 1) or (int(cell.attrib["row"]) > 100):
+                xmlFormatError()
+
+def getFileNameIfWithoutErrors():
+    checkIfRequiredParameterExists()
+
+    xmlFileName = sys.argv[1]
+    checkIfRequiredParemeterIsXML(xmlFileName)
+
+    xmlRoot = ET.parse(xmlFileName).getroot()
+    checkXmlContent(xmlRoot)
+    return xmlFileName
+
+
 def getFilepath():
     filepath = "json.json"
     if len(sys.argv) == 3:
@@ -200,13 +207,14 @@ def writeJson(filepath, jsonData):
     print(filepath)
 
 if __name__ == "__main__":
-    MapHelper.checkRequiredParameter()
+    start_time = time.clock()
 
-    start_time = time.time()
+    xmlFileName = getFileNameIfWithoutErrors()
 
-    paths = main()
+    paths = main(xmlFileName)
+
     jsonData = {
-        "execution_time_in_ms": round((time.time() - start_time) / 1000, 2),	
+        "execution_time_in_ms": round((time.clock() - start_time) * 1000, 2),	
         "paths": paths
     }
 
